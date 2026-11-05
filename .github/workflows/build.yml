@@ -1,0 +1,75 @@
+name: build-kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      kver:
+        description: "kernel version"
+        required: true
+        default: "6.6.100"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential flex bison bc libssl-dev libelf-dev \
+            cpio kmod xz-utils gcc-arm-linux-gnueabihf
+
+      - name: Fetch kernel source
+        run: |
+          KVER="${{ github.event.inputs.kver }}"
+          MAJ=$(echo "$KVER" | cut -d. -f1)
+          echo "building $KVER"
+          curl -sSL -o k.tar.xz "https://cdn.kernel.org/pub/linux/kernel/v${MAJ}.x/linux-${KVER}.tar.xz"
+          tar xf k.tar.xz
+          mv "linux-${KVER}" linux
+          ls linux | head
+
+      - name: Build static init (armhf)
+        run: |
+          mkdir -p irfs
+          arm-linux-gnueabihf-gcc -static -Os -s -o irfs/init init/init.c
+          chmod 755 irfs/init
+          file irfs/init
+
+      - name: Configure
+        run: |
+          cd linux
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- multi_v7_defconfig
+          ./scripts/config --set-str CONFIG_INITRAMFS_SOURCE "$GITHUB_WORKSPACE/irfs"
+          ./scripts/config --set-str CONFIG_LOCALVERSION "-veyron"
+          ./scripts/config --enable  CONFIG_BLK_DEV_INITRD
+          ./scripts/config --enable  CONFIG_BLK_DEV_LOOP
+          ./scripts/config --enable  CONFIG_EXT4_FS
+          ./scripts/config --disable CONFIG_MODULE_SIG_FORCE
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- olddefconfig
+          grep -E "CONFIG_INITRAMFS_SOURCE|CONFIG_BLK_DEV_LOOP|CONFIG_BLK_DEV_INITRD|CONFIG_LOCALVERSION=|CONFIG_EXT4_FS=" .config
+
+      - name: Build kernel
+        run: |
+          cd linux
+          make -j"$(nproc)" ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- zImage modules dtbs
+
+      - name: Package
+        run: |
+          mkdir -p out
+          cp linux/arch/arm/boot/zImage out/zImage
+          cp linux/arch/arm/boot/dts/rockchip/rk3288-veyron-mickey.dtb out/ || true
+          cd linux
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH="$GITHUB_WORKSPACE/out/mod" modules_install
+          cd "$GITHUB_WORKSPACE"
+          tar czf out/modules.tar.gz -C out/mod .
+          rm -rf out/mod
+          cd out && sha256sum * > SHA256SUMS && ls -l
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ github.event.inputs.kver }}
+          path: out/
+          retention-days: 14
