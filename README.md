@@ -135,9 +135,22 @@ depmod 6.6.100-veyron
 | 版本 | 启动 | 显示 | 备注 |
 |---|---|---|---|
 | **6.6.100** | ✅ | ✅ 干净 | 当前使用；Landlock 版 pacman 免参数 |
+| 6.12 LTS | 待测 | 待测 | 6.x 最后一条未测的 LTS |
+| 6.18.60（最新 LTS） | ❌ **内核 oops** | ❌ 闪屏 | `rb_erase` 空指针崩在 PID 1（systemd），见下方日志 |
 | 7.1.6（ALARM 官方） | ✅ | ❌ 彩线/丢同步 | 原厂 armv7 内核 |
-| 6.18.60（最新 LTS） | ❌ 卡在 systemd | ❌ 闪屏 | 内建 init 走到 `13-before-exec` 后 systemd 未起 |
-| 7.3.1（最新稳定） | 未测 | 未测 | 与 ALARM 主线同版本，可自行尝试 |
+| 7.3.1（最新稳定） | ✅ | ❌ 闪屏 | 显示问题在 6.7+ 出现回归 |
+
+6.18.60 崩溃现场（`journalctl -b -2`）：
+
+```
+Unable to handle kernel NULL pointer dereference ...
+Internal error: Oops: 805 [#1] SMP ARM
+PC is at rb_erase+0x74/0x2fc
+CPU: 2  PID: 1  Comm: systemd
+```
+
+**这说明显示问题是 6.7 之后的内核回归**（6.6 干净、6.18/7.x 都不行），而 6.18.60 额外还有一个
+`rb_erase` 崩溃 bug。
 
 > 结论：这块板子对内核版本相当敏感，升级内核前务必准备好回退用的 `.kpart`。
 > 想追新的话建议先在 SD 卡上验证，再写 eMMC。
@@ -339,6 +352,15 @@ max98090 编解码器（那是 veyron 笔记本的），DT 里带着它，报错
 
 - **现象**：`modetest -w 45:46:8`（改 max bpc）报 `CONNECTOR 45 has no 46 property`
 - **解法**：这个构建的 `-w` 有 bug，改用 libdrm 自己写工具，或直接用 `-s` 换模式验证
+
+
+### 坑 #11：只换内核不换模块 → WiFi 直接消失
+
+- **现象**：回退到旧 kpart 后能开机，但 `wlan0` 不见了、SSH 连不上
+- **原因**：`/usr/lib/modules/6.6.100-veyron` 已被新构建（Landlock 版）的模块覆盖，
+  旧内核加载时符号版本不匹配，`brcmfmac` 加载失败
+- **解法**：**内核分区和 `/usr/lib/modules/<ver>` 永远成对替换**；
+  回退时也要把对应的模块一起换回去（或者干脆保留多份 `kpart + modules` 配对备份）
 
 ---
 
