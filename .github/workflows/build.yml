@@ -56,7 +56,9 @@ jobs:
           ./scripts/config --enable  CONFIG_NAMESPACES
           ./scripts/config --enable  CONFIG_USER_NS
           ./scripts/config --enable  CONFIG_UHID
+          ./scripts/config --enable  CONFIG_BT_BREDR
           ./scripts/config --enable  CONFIG_BT_HIDP
+          ./scripts/config --enable  CONFIG_BT_LE
           ./scripts/config --enable  CONFIG_HID_GENERIC
           ./scripts/config --enable  CONFIG_HID_MICROSOFT
           ./scripts/config --enable  CONFIG_HID_SONY
