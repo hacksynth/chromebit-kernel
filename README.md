@@ -210,6 +210,36 @@ depmod -b /mnt 6.6.100-veyron
 # root 由内建 initramfs 通过 /dev/loop0 挂载
 ```
 
+
+## 6.5 装好之后（首次启动的收尾）
+
+eMMC 系统起来后，建议马上做这几件事（都踩过坑）：
+
+```bash
+# 时区（内核 RTC 不可靠，先设时区再开 NTP）
+timedatectl set-timezone Asia/Shanghai
+timedatectl set-ntp true
+
+# 国内源（ALARM 的仓库目录名是 armv7h，注意别写成 armv7）
+cat > /etc/pacman.d/mirrorlist <<'EOF'
+Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxarm/$arch/$repo
+Server = https://mirrors.ustc.edu.cn/archlinuxarm/$arch/$repo
+EOF
+
+# 锁住内核包，防止升级时覆盖内核分区（坑 #9）
+echo 'IgnorePkg = linux-armv7 linux-armv7-chromebook' >> /etc/pacman.conf
+
+# 删掉不再需要的旧内核模块
+rm -rf /lib/modules/7.1.6-1-armv7-ARCH
+
+# 验证
+pacman -Syy            # 应能正常同步（新内核带 Landlock，无需 --disable-sandbox）
+systemctl --failed     # 应为空
+```
+
+跳过 `rockchip-snd-max98090: Soc register card failed -517`：Chromebit 没有
+max98090 编解码器（那是 veyron 笔记本的），DT 里带着它，报错无害。
+
 ---
 
 ## 7. 踩坑记录
