@@ -55,6 +55,13 @@ jobs:
           ./scripts/config --enable  CONFIG_SECURITY_LANDLOCK
           ./scripts/config --enable  CONFIG_NAMESPACES
           ./scripts/config --enable  CONFIG_USER_NS
+          ./scripts/config --enable  CONFIG_UHID
+          ./scripts/config --enable  CONFIG_BT_HIDP
+          ./scripts/config --enable  CONFIG_HID_GENERIC
+          ./scripts/config --enable  CONFIG_HID_MICROSOFT
+          ./scripts/config --enable  CONFIG_HID_SONY
+          ./scripts/config --enable  CONFIG_HID_NINTENDO
+          ./scripts/config --enable  CONFIG_HID_PLAYSTATION
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- olddefconfig
           grep -E "CONFIG_INITRAMFS_SOURCE|CONFIG_BLK_DEV_LOOP|CONFIG_BLK_DEV_INITRD|CONFIG_LOCALVERSION=|CONFIG_EXT4_FS=|CONFIG_KERNEL_XZ=|CONFIG_CC_OPTIMIZE_FOR_SIZE=" .config
 
