@@ -115,6 +115,33 @@ eMMC 的 GPT 我们用脚本重建（见 `scripts/mkgpt.py`），布局与原厂
 
 ---
 
+
+## 快速开始（用预编译内核，跳过第 4 节）
+
+已经有一个**验证可用**的构建：[Release v1-6.6.100](https://github.com/hacksynth/chromebit-kernel/releases/tag/v1-6.6.100)
+（linux 6.6.100，内建 initramfs，1080p 干净，Landlock 已开）。
+
+```console
+gh release download v1-6.6.100 -R hacksynth/chromebit-kernel -D k
+# 内核（devkey 签名，可直接写）
+dd if=k/vmlinux.kpart of=/dev/mmcblk0 bs=1M seek=10 conv=fsync,notrunc
+# 模块（注意进 usr/lib/modules，别解到 /lib）
+tar xzf k/modules.tar.gz -C /tmp && cp -a /tmp/lib/modules/* /usr/lib/modules/
+depmod 6.6.100-veyron
+```
+
+## 内核版本兼容性（实测）
+
+| 版本 | 启动 | 显示 | 备注 |
+|---|---|---|---|
+| **6.6.100** | ✅ | ✅ 干净 | 当前使用；Landlock 版 pacman 免参数 |
+| 7.1.6（ALARM 官方） | ✅ | ❌ 彩线/丢同步 | 原厂 armv7 内核 |
+| 6.18.60（最新 LTS） | ❌ 卡在 systemd | ❌ 闪屏 | 内建 init 走到 `13-before-exec` 后 systemd 未起 |
+| 7.3.1（最新稳定） | 未测 | 未测 | 与 ALARM 主线同版本，可自行尝试 |
+
+> 结论：这块板子对内核版本相当敏感，升级内核前务必准备好回退用的 `.kpart`。
+> 想追新的话建议先在 SD 卡上验证，再写 eMMC。
+
 ## 4. 编译内核
 
 仓库自带 GitHub Actions 工作流（`.github/workflows/build.yml`）：
