@@ -1,5 +1,10 @@
 # Arch Linux ARM on ASUS Chromebit CS10 (veyron-mickey)
 
+[![build](https://github.com/hacksynth/chromebit-kernel/actions/workflows/build.yml/badge.svg)](https://github.com/hacksynth/chromebit-kernel/actions/workflows/build.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**[English](README.en.md)**
+
 在一台 **ASUS Chromebit CS10**（RK3288 / 2GB / 16GB eMMC / 开发者模式的 Stick 电脑）上，
 把 Arch Linux ARM 装进**内置 eMMC**并正常启动的完整记录。
 
@@ -9,6 +14,16 @@
 > 唯一可行的是：**把 initramfs 编进内核**，由它在启动时用 loop 偏移挂载 eMMC 分区。
 
 *English summary at the bottom.*
+
+
+## 0.5 一路上的症状（对照图）
+
+| 阶段 | 症状 | 原因 |
+|---|---|---|
+| 最初 | ![systemd freeze](docs/images/01-systemd-freeze.jpg) 启动到一半 `Failed to mount early API filesystems` 冻结 | 用 ChromeOS 4.19 内核配 261 的 systemd，版本代差 |
+| 换系统后 | ![artifacts](docs/images/02-hdmi-artifacts.jpg) 画面有横向彩色细线、偶尔丢同步 | 7.1.6 内核的 HDMI 输出问题 |
+| 中间 | ![recovery](docs/images/03-recovery-mode.jpg) 一台"OS 不存在"的恢复模式 | `mmc sanitize` 擦掉了备份 GPT |
+| 最后 | ![test pattern](docs/images/04-test-pattern.jpg) `modetest` 测试图完全干净 | 6.6.100 + 1080p60 CEA 时序 |
 
 ---
 
