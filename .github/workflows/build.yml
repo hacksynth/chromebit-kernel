@@ -47,9 +47,12 @@ jobs:
           ./scripts/config --enable  CONFIG_BLK_DEV_INITRD
           ./scripts/config --enable  CONFIG_BLK_DEV_LOOP
           ./scripts/config --enable  CONFIG_EXT4_FS
+          ./scripts/config --enable  CONFIG_KERNEL_XZ
+          ./scripts/config --disable CONFIG_KERNEL_GZIP
+          ./scripts/config --enable  CONFIG_CC_OPTIMIZE_FOR_SIZE
           ./scripts/config --disable CONFIG_MODULE_SIG_FORCE
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- olddefconfig
-          grep -E "CONFIG_INITRAMFS_SOURCE|CONFIG_BLK_DEV_LOOP|CONFIG_BLK_DEV_INITRD|CONFIG_LOCALVERSION=|CONFIG_EXT4_FS=" .config
+          grep -E "CONFIG_INITRAMFS_SOURCE|CONFIG_BLK_DEV_LOOP|CONFIG_BLK_DEV_INITRD|CONFIG_LOCALVERSION=|CONFIG_EXT4_FS=|CONFIG_KERNEL_XZ=|CONFIG_CC_OPTIMIZE_FOR_SIZE=" .config
 
       - name: Build kernel
         run: |
