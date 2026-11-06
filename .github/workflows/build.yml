@@ -51,6 +51,10 @@ jobs:
           ./scripts/config --disable CONFIG_KERNEL_GZIP
           ./scripts/config --enable  CONFIG_CC_OPTIMIZE_FOR_SIZE
           ./scripts/config --disable CONFIG_MODULE_SIG_FORCE
+          ./scripts/config --enable  CONFIG_SECURITY
+          ./scripts/config --enable  CONFIG_SECURITY_LANDLOCK
+          ./scripts/config --enable  CONFIG_NAMESPACES
+          ./scripts/config --enable  CONFIG_USER_NS
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- olddefconfig
           grep -E "CONFIG_INITRAMFS_SOURCE|CONFIG_BLK_DEV_LOOP|CONFIG_BLK_DEV_INITRD|CONFIG_LOCALVERSION=|CONFIG_EXT4_FS=|CONFIG_KERNEL_XZ=|CONFIG_CC_OPTIMIZE_FOR_SIZE=" .config
 
