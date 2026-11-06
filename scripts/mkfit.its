@@ -1,0 +1,47 @@
+/*
+ * FIT image for the ChromeOS kernel slot on ASUS Chromebit CS10 (veyron-mickey).
+ *
+ * Build:   mkimage -f mkfit.its fit.img
+ *
+ * Notes:
+ *   - kernel_noload + compression "none": the payload is a self-decompressing
+ *     zImage, exactly like the official ALARM chromebook FIT.
+ *   - no ramdisk node: depthcharge does not pass FIT ramdisks to the kernel,
+ *     the initramfs is compiled into the kernel instead.
+ *   - the `compatible` string is what the firmware matches to pick this config.
+ */
+/dts-v1/;
+/ {
+	description = "Chrome OS kernel image with one or more FDT blobs";
+	#address-cells = <1>;
+
+	images {
+		kernel@1 {
+			description = "kernel";
+			data = /incbin/("zImage");
+			type = "kernel_noload";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0>;
+			entry = <0>;
+		};
+		fdt@1 {
+			description = "rk3288-veyron-mickey.dtb";
+			data = /incbin/("rk3288-veyron-mickey.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+		};
+	};
+
+	configurations {
+		default = "conf-veyron-mickey";
+		conf-veyron-mickey {
+			description = "Google Mickey";
+			kernel = "kernel@1";
+			fdt = "fdt@1";
+			compatible = "google,veyron-mickey";
+		};
+	};
+};
